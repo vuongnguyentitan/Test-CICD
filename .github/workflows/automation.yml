@@ -8,6 +8,12 @@ on:
         type: boolean
         default: false
 
+      migrate-main-tag2:
+        description: "Run migration tag 2"
+        required: true
+        type: boolean
+        default: false
+
 jobs:
   migration:
     name: Run database migration
