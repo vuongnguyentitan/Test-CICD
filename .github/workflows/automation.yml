@@ -13,20 +13,20 @@ jobs:
     name: Run database migration
     runs-on: ubuntu-latest
     # only run when migrate=true
-    if: ${{ github.event.inputs.migrate == 'true' }}
+    # if: ${{ github.event.inputs.migrate == 'true' }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Migrate
-        run: echo "Running migrations…" && sleep 60 && exit 1
+    #   - name: Checkout code
+    #     uses: actions/checkout@v4
+      - name: Migrate main
+        run: echo "Running migrations…"
 
-  deploy:
-    name: Deploy ${{ github.event.inputs.target }}
-    runs-on: ubuntu-latest
-    needs: [ migration ]
-    environment: ${{ github.event.inputs.target }}
-    # if: ${{ always() }}
-    if: ${{ !cancelled() && ( needs.migration.result == 'success' ||  needs.migration.result == 'skipped' ) }}
-    steps:
-      - name: Deploy
-        run: echo "ABCD - ${{ needs.migration.result }}…"
+  # deploy:
+  #   name: Deploy ${{ github.event.inputs.target }}
+  #   runs-on: ubuntu-latest
+  #   needs: [ migration ]
+  #   environment: ${{ github.event.inputs.target }}
+  #   # if: ${{ always() }}
+  #   if: ${{ !cancelled() && ( needs.migration.result == 'success' ||  needs.migration.result == 'skipped' ) }}
+  #   steps:
+  #     - name: Deploy
+  #       run: echo "ABCD - ${{ needs.migration.result }}…"
