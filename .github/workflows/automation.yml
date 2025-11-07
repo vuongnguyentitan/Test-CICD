@@ -7,6 +7,11 @@ on:
         required: true
         type: boolean
         default: false
+      migrate2:
+        description: "Run migration 2 devops"
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   migration:
