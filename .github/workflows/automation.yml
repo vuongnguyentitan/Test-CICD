@@ -17,7 +17,19 @@ jobs:
     steps:
     #   - name: Checkout code
     #     uses: actions/checkout@v4
-      - name: Migrate main
+      - name: Migrate devops
+        run: echo "Running migrations…"
+
+
+  migration2:
+    name: Run database migration 2
+    runs-on: ubuntu-latest
+    # only run when migrate=true
+    # if: ${{ github.event.inputs.migrate == 'true' }}
+    steps:
+    #   - name: Checkout code
+    #     uses: actions/checkout@v4
+      - name: Migrate devops
         run: echo "Running migrations…"
 
   # deploy:
