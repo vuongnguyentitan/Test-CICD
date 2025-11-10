@@ -22,6 +22,7 @@ permissions:
 jobs:
   tag-and-release:
     runs-on: ubuntu-latest
+    name: Create tag & release ${{inputs.tag_name}}
     steps:
       - name: Checkout (no need for full history unless you want)
         uses: actions/checkout@v4
