@@ -15,25 +15,72 @@ on:
         description: 'Release title (defaults to tag name)'
         required: false
         type: string
+      override:
+        description: 'Override existing tag & release if they already exist'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
-  contents: write  # needed to push tag & create release
+  contents: write  # needed to push tag & create/delete release
 
 jobs:
   tag-and-release:
     runs-on: ubuntu-latest
-    name: Create tag & release ${{ inputs.tag_name }}
+    name: Create tag & release ${{ github.event.inputs.tag_name }}
+
     steps:
-      - name: Checkout (no need for full history unless you want)
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Create tag
+      - name: Create or update tag
+        env:
+          TAG_NAME: ${{ github.event.inputs.tag_name }}
+          COMMIT_SHA: ${{ github.event.inputs.commit_sha }}
+          OVERRIDE: ${{ github.event.inputs.override }}
         run: |
+          set -e
           git fetch --all --tags
-          git tag "${{ github.event.inputs.tag_name }}" "${{ github.event.inputs.commit_sha }}"
-          git push origin "${{ github.event.inputs.tag_name }}"
+
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME already exists."
+            if [ "$OVERRIDE" = "true" ]; then
+              echo "Override enabled. Moving tag to $COMMIT_SHA"
+              git tag -f "$TAG_NAME" "$COMMIT_SHA"
+              git push origin "$TAG_NAME" --force
+            else
+              echo "Override disabled. Refusing to overwrite existing tag."
+              exit 1
+            fi
+          else
+            echo "Creating new tag $TAG_NAME at $COMMIT_SHA"
+            git tag "$TAG_NAME" "$COMMIT_SHA"
+            git push origin "$TAG_NAME"
+          fi
+
+      - name: Ensure release state (delete if overriding)
+        env:
+          TAG_NAME: ${{ github.event.inputs.tag_name }}
+          OVERRIDE: ${{ github.event.inputs.override }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+
+          # Check if a release already exists for this tag
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release for tag $TAG_NAME already exists."
+            if [ "$OVERRIDE" = "true" ]; then
+              echo "Override enabled. Deleting existing release."
+              gh release delete "$TAG_NAME" -y
+            else
+              echo "Override disabled. Refusing to overwrite existing release."
+              exit 1
+            fi
+          else
+            echo "No existing release for tag $TAG_NAME"
+          fi
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
