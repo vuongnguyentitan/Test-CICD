@@ -1,10 +1,9 @@
-name: Deploy code
-
+name: Upload file
 on:
   workflow_dispatch:
     inputs:
-      migrate:
-        description: "Run migration"
+      upload-file:
+        description: "Upload file?"
         required: true
         type: boolean
         default: false
@@ -13,10 +12,10 @@ env:
   UPLOAD_DIR: "reports"
 
 jobs:
-  migration:
+  upload-file:
     name: Database Migration & Report Upload
     # This ensures the job only runs if the user checked the 'migrate' box
-    if: ${{ github.event.inputs.migrate == 'true' }}
+    if: ${{ github.event.inputs.upload-file == 'true' }}
     runs-on: ubuntu-latest
     
     steps:
