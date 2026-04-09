@@ -32,6 +32,7 @@ jobs:
           # build .env
           printf "%s" "${{ vars.FE_DOT_ENV_FILE }}" > .env
           envsubst "$(printf '$%s ' $vars)" < .env > .env.tmp
+          echo "Final .env file:" >> .env.tmp
           mv .env.tmp .env
 
       - name: Upload scan reports
