@@ -2,6 +2,9 @@ name: Build dot env file
 on:
   workflow_dispatch:
 
+env:
+  UPLOAD_DIR: "reports"
+
 jobs:
   upload-file:
     runs-on: ubuntu-latest
