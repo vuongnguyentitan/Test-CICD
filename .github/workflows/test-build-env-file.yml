@@ -1,0 +1,39 @@
+name: Build dot env file
+on:
+  workflow_dispatch:
+
+jobs:
+  upload-file:
+    runs-on: ubuntu-latest
+    environment: development-test-env
+
+    env:
+      GITHUB__JSON_SECRETS: ${{ toJSON(secrets) }}
+
+    steps:
+      - name: Prepare env file
+        run: |
+          vars=$(echo "$GITHUB__JSON_SECRETS" | jq -r '
+            to_entries
+            | map(select(.key | startswith("FE__")))
+            | .[].key
+          ')
+
+          # export secrets
+          for v in $vars; do
+            export "$v=$(echo "$GITHUB__JSON_SECRETS" | jq -r --arg k "$v" '.[$k]')"
+            [ -z "${!v}" ] && echo "Missing $v" && exit 1
+          done
+
+          # build .env
+          printf "%s" "${{ vars.FE_DOT_ENV_FILE }}" > .env
+          envsubst "$(printf '$%s ' $vars)" < .env > .env.tmp
+          mv .env.tmp .env
+
+      - name: Upload scan reports
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-reports
+          path: ${{ env.UPLOAD_DIR }}
+          overwrite: true
