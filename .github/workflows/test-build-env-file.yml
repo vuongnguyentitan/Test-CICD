@@ -6,39 +6,30 @@ env:
   UPLOAD_DIR: "reports"
 
 jobs:
-  upload-file:
+  build-env:
     runs-on: ubuntu-latest
     environment: development-test-env
+
+    strategy:
+      matrix:
+        service: [FE, BE]
 
     env:
       GITHUB__JSON_SECRETS: ${{ toJSON(secrets) }}
 
     steps:
-      - name: Prepare env file
-        run: |
-          mkdir -p "${{ env.UPLOAD_DIR }}" && cd "${{ env.UPLOAD_DIR }}"
-          vars=$(echo "$GITHUB__JSON_SECRETS" | jq -r '
-            to_entries
-            | map(select(.key | startswith("FE__")))
-            | .[].key
-          ')
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-          # export secrets
-          for v in $vars; do
-            export "$v=$(echo "$GITHUB__JSON_SECRETS" | jq -r --arg k "$v" '.[$k]')"
-            [ -z "${!v}" ] && echo "Missing $v" && exit 1
-          done
+      - name: Prepare env file for ${{ matrix.service }}
+        env:
+          SERVICE_PREFIX: ${{ matrix.service }}
+          DOT_ENV_TEMPLATE: ${{ vars[format('{0}_DOT_ENV_FILE', matrix.service)] }}
+        run: ./.github/scripts/prepare-env-file.sh
 
-          # build .env
-          printf "%s" "${{ vars.FE_DOT_ENV_FILE }}" > .env
-          envsubst "$(printf '$%s ' $vars)" < .env > .env.tmp
-          echo "Final .env file:" >> .env.tmp
-          mv .env.tmp dotenvfile.txt
-
-      - name: Upload scan reports
-        id: upload
+      - name: Upload env artifact (${{ matrix.service }})
         uses: actions/upload-artifact@v4
         with:
-          name: migration-reports
+          name: env-${{ matrix.service }}
           path: ${{ env.UPLOAD_DIR }}
           overwrite: true
