@@ -16,6 +16,7 @@ jobs:
     steps:
       - name: Prepare env file
         run: |
+          mkdir -p "${{ env.UPLOAD_DIR }}" && cd "${{ env.UPLOAD_DIR }}"
           vars=$(echo "$GITHUB__JSON_SECRETS" | jq -r '
             to_entries
             | map(select(.key | startswith("FE__")))
@@ -31,7 +32,7 @@ jobs:
           # build .env
           printf "%s" "${{ vars.FE_DOT_ENV_FILE }}" > .env
           envsubst "$(printf '$%s ' $vars)" < .env > .env.tmp
-          mv .env.tmp
+          mv .env.tmp .env
 
       - name: Upload scan reports
         id: upload
