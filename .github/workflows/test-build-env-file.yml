@@ -31,7 +31,7 @@ jobs:
           # build .env
           printf "%s" "${{ vars.FE_DOT_ENV_FILE }}" > .env
           envsubst "$(printf '$%s ' $vars)" < .env > .env.tmp
-          mv .env.tmp .env
+          mv .env.tmp
 
       - name: Upload scan reports
         id: upload
